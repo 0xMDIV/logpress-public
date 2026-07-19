@@ -36,7 +36,7 @@
       <h3>{{ $t('exercises') }} ({{ workout.exercises?.length || 0 }})</h3>
       <div v-for="ex in workout.exercises" :key="ex.name" class="ex-row">
         <span>{{ ex.name }}</span>
-        <span class="ex-sets">{{ ex.sets.filter(s => s.isCompleted).length }} sets</span>
+        <span class="ex-sets">{{ ex.sets.filter((s: any) => s.isCompleted).length }} sets</span>
       </div>
     </div>
 

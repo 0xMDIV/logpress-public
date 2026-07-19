@@ -30,7 +30,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,json,lottie}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/[a-z]*\.supabase\.co\/rest\/v1\/.*/i,
+            urlPattern: /\/rest\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-api',
@@ -40,7 +40,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/[a-z]*\.supabase\.co\/auth\/v1\/.*/i,
+            urlPattern: /\/auth\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-auth',
@@ -74,7 +74,6 @@ export default defineConfig({
     },
   },
   server: {
-    https: false,
     host: true,
   },
 })

@@ -73,7 +73,8 @@ const selectedExercises = ref<Exercise[]>([])
 const activeFilter = ref<'all' | 'equipment' | 'muscle'>('all')
 const selectedFilterValue = ref('')
 
-const filters = [
+type FilterKey = 'all' | 'equipment' | 'muscle'
+const filters: { key: FilterKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'equipment', label: 'Equipment' },
   { key: 'muscle', label: 'Muscle' },
