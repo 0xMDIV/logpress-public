@@ -1,129 +1,340 @@
 <p align="center">
-  <img src="docs/hero.svg" alt="LogPress AI — AI-powered workout tracking for iOS and Android" width="100%">
+  <img src="docs/hero.svg" alt="LogPress AI — AI-powered workout tracking" width="100%">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-iOS%20%7C%20Android-blue" alt="platform">
-  <img src="https://img.shields.io/badge/React%20Native-0.80-orange" alt="react native">
-  <img src="https://img.shields.io/badge/TypeScript-5-blue" alt="typescript">
-  <img src="https://img.shields.io/badge/offline--capable-brightgreen" alt="offline capable">
+  <img src="https://img.shields.io/badge/platform-PWA%20%7C%20iOS%20%7C%20Android-blue" alt="platform">
+  <img src="https://img.shields.io/badge/Vue%203-3.5-4FC08D" alt="vue">
+  <img src="https://img.shields.io/badge/TypeScript-6-blue" alt="typescript">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
 </p>
 
-A React Native fitness app that plans workouts, logs sets and reps, and turns your training history into an AI-generated fitness score. This is the **public, sanitized** version of the app — no embedded API keys or Firebase config, ready to run with your own.
+A fitness tracking app that logs workouts, tracks sets and reps, and generates AI-powered fitness scores. Available as a **Progressive Web App** (iOS/Android installable) and the original **React Native** app.
 
-## Screenshots
+> **PWA** — `web/` (Vue 3 + Vite)  
+> **React Native (legacy)** — root directory
 
-**Onboarding** — a short flow that personalizes the setup:
+---
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="docs/screenshots/01-welcome.png" width="155"/><br/><sub><b>Welcome</b></sub></td>
-    <td align="center"><img src="docs/screenshots/02-gender.png" width="155"/><br/><sub><b>Gender</b></sub></td>
-    <td align="center"><img src="docs/screenshots/03-age.png" width="155"/><br/><sub><b>Age</b></sub></td>
-    <td align="center"><img src="docs/screenshots/04-weight.png" width="155"/><br/><sub><b>Weight</b></sub></td>
-    <td align="center"><img src="docs/screenshots/05-height.png" width="155"/><br/><sub><b>Height</b></sub></td>
-  </tr>
-</table>
-
-**In the app** — workout logging and statistics, dark theme:
-
-<table align="center">
-  <tr>
-    <td align="center"><img src="docs/screenshots/07-workout.png" width="200"/><br/><sub><b>Log a Workout</b></sub></td>
-    <td align="center"><img src="docs/screenshots/06-statistics.png" width="200"/><br/><sub><b>Statistics</b></sub></td>
-  </tr>
-</table>
-
-## Features
-
-- **Personalized onboarding** — gender, age, weight & height feed a tailored setup.
-- **AI fitness score** — workout history analyzed by OpenAI into a score and a progress plan.
-- **Workout logging** — build routines, track sets, reps and weight, keep full history.
-- **Statistics** — general rating, total volume, weekly activity and progress charts.
-- **Gamification** — points, badges and a leaderboard from Bronze up.
-- **Premium / paywall** — subscription management via Adapty.
-- **Localization** — multi-language support with i18next.
-- **Light & dark themes.**
-
-## Tech Stack
+## 🚀 Stack Overview
 
 | Layer | Technology |
-|---|---|
-| Framework | React Native 0.80 · React 19 · TypeScript |
-| State | Redux Toolkit · React Redux |
-| Navigation | React Navigation 7 (native-stack) |
-| Backend / Auth | Supabase |
-| AI | OpenAI API |
-| Subscriptions | Adapty |
-| Analytics | Firebase Analytics |
-| UI | styled-components · Lottie · react-native-svg · react-native-video |
-| i18n | i18next · react-i18next |
+|-------|-----------|
+| **Frontend** | Vue 3 · Vite · TypeScript · Pinia · Vue Router |
+| **Backend / Auth** | Supabase (self-hosted via Docker) |
+| **AI** | Requesty API (OpenAI-kompatibel, via Supabase Edge Function) |
+| **Analytics** | Supabase (eigene `analytics_events`-Tabelle) |
+| **Offline** | Dexie.js (IndexedDB) · Workbox Service Worker |
+| **PWA** | vite-plugin-pwa · Web App Manifest |
+| **i18n** | i18next · 16 Sprachen |
 
-## Getting Started
+---
 
-> This is the public / sanitized version of the app. It ships without real API keys or Firebase config — bring your own to run it.
+## 📦 Komplett-Setup auf frischem Ubuntu Server
 
-### 1. Install dependencies
+### 1. Server-Grundinstallation
 
-```sh
-npm install
-cd ios && bundle install && bundle exec pod install && cd ..
+```bash
+# System aktualisieren
+sudo apt update && sudo apt upgrade -y
+
+# Docker installieren
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+# → Danach aus- und wieder einloggen (oder `newgrp docker`)
+
+# Docker Compose (Plugin)
+sudo apt install docker-compose-plugin -y
+
+# Nginx
+sudo apt install nginx certbot python3-certbot-nginx -y
+
+# Git
+sudo apt install git -y
+
+# Node.js 22+
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install nodejs -y
 ```
 
-### 2. Configure environment
+### 2. Projekt klonen
 
-```sh
+```bash
+cd /opt
+sudo git clone https://github.com/0xMDIV/logpress-public.git
+sudo chown -R $USER:$USER logpress-public
+cd logpress-public
+```
+
+### 3. Supabase (self-hosted via Docker)
+
+Supabase wird als separater Docker-Stack direkt neben der App betrieben.
+
+```bash
+cd /opt
+git clone --depth 1 https://github.com/supabase/docker
+cd docker
+
+# Standard-Konfiguration kopieren
 cp .env.example .env
 ```
 
-Fill in `.env` with your own keys:
+**Wichtige Werte in `.env` setzen:**
 
-| Variable | Where to get it |
-|---|---|
-| `OPENAI_API_KEY` | https://platform.openai.com/api-keys |
-| `ADAPTY_API_KEY` | https://app.adapty.io (starts with `public_live_`) |
-| `SUPABASE_URL` | https://supabase.com → Project Settings → API |
-| `SUPABASE_ANON_KEY` | https://supabase.com → Project Settings → API |
-
-### 3. Firebase (analytics)
-
-- **iOS** — create an iOS app in your Firebase project, download `GoogleService-Info.plist`, drop it into `ios/`. (Template: `ios/GoogleService-Info.plist.example`)
-- **Android** — download `google-services.json` into `android/app/`.
-
-### 4. iOS signing
-
-- Open `ios/logpressai.xcworkspace` in Xcode → Targets → logpressai → **Signing & Capabilities** → select your Apple Developer Team.
-- Change the Bundle Identifier to your own (current: `com.logpress.app`).
-
-### 5. Run
-
-```sh
-npm start          # Metro bundler
-npm run ios        # or
-npm run android
+```bash
+nano .env
 ```
 
-## Offline / Demo Mode
+Mindestens diese ändern:
 
-Run the app with no backend and no internet — demos, App Store screenshots, offline use. Flip a single switch:
+| Variable | Beispiel | Hinweis |
+|----------|----------|---------|
+| `POSTGRES_PASSWORD` | `dein_sicheres_passwort` | Datenbank-Passwort |
+| `JWT_SECRET` | `openssl rand -hex 32` ausführen und eintragen | Wichtig für Auth |
+| `ANON_KEY` | `openssl rand -hex 32` | Public API Key (darf im Browser landen) |
+| `SERVICE_ROLE_KEY` | `openssl rand -hex 32` | Secret — niemals im Frontend nutzen |
+| `SITE_URL` | `https://deine-domain.de` | Für Auth-Redirects |
 
-```ts
-// src/config/offline.ts
-export const OFFLINE_MODE = true;
+**Keys generieren:**
+
+```bash
+# Zwei sichere Keys erzeugen
+openssl rand -hex 32   # für JWT_SECRET
+openssl rand -hex 32   # für ANON_KEY / SERVICE_ROLE_KEY
 ```
 
-When enabled, the app makes zero network requests: Supabase (auth + all queries), Adapty, Firebase Analytics and OpenAI calls are all short-circuited. Paywall screens show mock products, and "Buy Premium" succeeds instantly (no real payment). Set it back to `false` and rebuild to go online.
+Jetzt starten:
 
-## Troubleshooting
+```bash
+docker compose up -d
+```
 
-- **`fmt` / `consteval` build error on iOS (Xcode 16.3+ / 26)** — the `post_install` hook in `ios/Podfile` auto-patches `Pods/fmt/include/fmt/base.h` (`FMT_USE_CONSTEVAL=0`). Re-run `bundle exec pod install` and build again.
-- General React Native issues: https://reactnative.dev/docs/troubleshooting
+Nach ein paar Minuten läuft Supabase unter:
 
-## Contributing
+| Dienst | URL |
+|--------|-----|
+| **Studio (Dashboard)** | `http://DEINE_SERVER_IP:3000` |
+| **API (Kong)** | `http://DEINE_SERVER_IP:8000` |
+| **Postgres** | `localhost:5432` (intern) |
 
-Issues and pull requests are welcome.
+**Supabase Studio aufrufen:**  
+Browser → `http://DEINE_SERVER_IP:3000` → mit dem `ANON_KEY` aus `.env` einloggen.
+
+### 4. Datenbank-Tabellen anlegen
+
+Im Supabase Studio → **SQL Editor** → folgende SQL ausführen:
+
+```sql
+-- Datei: migrations/analytics_events.sql (im Projekt enthalten)
+-- Einfach den Inhalt der Datei kopieren und ausführen
+```
+
+Die Tabellen für `profiles`, `workouts`, `routines` etc. erstellt Supabase automatisch, sobald die Edge Function oder die App darauf zugreift — oder du legst sie im SQL Editor an (siehe `migrations/`-Ordner für weitere SQL-Skripte).
+
+**Edge Function deployen:**
+
+```bash
+cd /opt/logpress-public/web
+
+# Supabase CLI installieren
+npm install -g supabase
+
+# Supabase verbinden (Kong-URL + Service Role Key)
+supabase link --project-ref local \
+  --project-url http://DEINE_SERVER_IP:8000
+
+# Requesty-API-Key als Secret setzen
+supabase secrets set REQUESTY_API_KEY=sk-dein-requesty-key
+supabase secrets set REQUESTY_BASE_URL=https://router.requesty.ai/v1
+supabase secrets set REQUESTY_MODEL=gpt-4o-mini
+
+# Edge Function deployen
+supabase functions deploy ai-score
+```
+
+### 5. PWA konfigurieren & bauen
+
+```bash
+cd /opt/logpress-public
+
+# .env erstellen (Vorlage kopieren)
+cp .env.example .env
+nano .env
+```
+
+`.env` ausfüllen:
+
+```env
+VITE_SUPABASE_URL=http://DEINE_SERVER_IP:8000
+VITE_SUPABASE_ANON_KEY=dein_anon_key_aus_supabase_env
+```
+
+Dann bauen:
+
+```bash
+cd /opt/logpress-public/web
+npm install
+npm run build
+```
+
+→ Das fertige PWA liegt in `web/dist/`.
+
+### 6. Nginx-Reverse-Proxy (Empfohlen)
+
+Statt IP + Port bekommst du saubere Domains. Dieser Config proxyt **Supabase UND die PWA unter einer Domain**:
+
+```nginx
+# /etc/nginx/sites-available/logpress
+server {
+    listen 80;
+    server_name deine-domain.de;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name deine-domain.de;
+
+    # SSL (siehe Schritt 7)
+    ssl_certificate /etc/letsencrypt/live/deine-domain.de/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/deine-domain.de/privkey.pem;
+
+    # PWA (statische Dateien)
+    root /opt/logpress-public/web/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Supabase API (wird von der PWA benötigt)
+    location /supabase/ {
+        rewrite ^/supabase/(.*) /$1 break;
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+
+    # Supabase Studio (optional — nur für Admins freigeben)
+    location /studio/ {
+        rewrite ^/studio/(.*) /$1 break;
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
+```
+
+Aktivieren:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/logpress /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**.env anpassen** (damit die PWA die proxied Supabase-URL nutzt):
+
+```env
+VITE_SUPABASE_URL=https://deine-domain.de/supabase
+VITE_SUPABASE_ANON_KEY=dein_anon_key
+```
+
+PWA neu bauen:
+
+```bash
+cd /opt/logpress-public/web
+npm run build
+```
+
+### 7. SSL mit Let's Encrypt
+
+```bash
+sudo certbot --nginx -d deine-domain.de
+```
+
+Automatische Verlängerung testen:
+
+```bash
+sudo certbot renew --dry-run
+```
+
+### 8. App in Supabase als Site URL eintragen
+
+Supabase Studio → **Authentication** → **URL Configuration**:
+
+| Feld | Wert |
+|------|------|
+| `Site URL` | `https://deine-domain.de` |
+| `Redirect URLs` | `https://deine-domain.de` |
+
+---
+
+## 🔧 Wartung
+
+### Supabase aktualisieren
+
+```bash
+cd /opt/docker
+docker compose pull
+docker compose up -d
+```
+
+### PWA neu bauen (nach Code-Änderungen)
+
+```bash
+cd /opt/logpress-public
+git pull
+cd web
+npm install
+npm run build
+sudo systemctl reload nginx
+```
+
+### Logs
+
+```bash
+docker compose logs -f         # Supabase-Logs
+sudo journalctl -u nginx -f    # Nginx-Logs
+```
+
+---
+
+## 🧪 Lokale Entwicklung
+
+```bash
+cd web
+npm run dev
+# → http://localhost:5173
+```
+
+Der Dev-Server hot-reloaded bei Änderungen. Die Supabase-API muss erreichbar sein (lokal oder per SSH-Tunnel).
+
+---
+
+## 📁 Projektstruktur
+
+```
+├── web/                          # Vue 3 PWA
+│   ├── src/
+│   │   ├── router/               # Vue Router (alle Routen)
+│   │   ├── stores/               # Pinia (user, workout, settings)
+│   │   ├── services/             # Supabase, AI, DB (Dexie), Analytics, Offline
+│   │   ├── views/                # Seiten (onboarding, workout, stats, profile)
+│   │   └── components/           # UI-Komponenten
+│   ├── supabase/functions/       # Edge Function (ai-score → Requesty)
+│   └── vite.config.ts            # PWA-Konfiguration
+├── src/                          # React Native (legacy)
+├── migrations/                   # SQL-Migrationen für Supabase
+└── .env.example                  # Vorlage für .env
+```
+
+---
 
 ## License
 
-Released under the [MIT License](LICENSE).
+[MIT](LICENSE)
